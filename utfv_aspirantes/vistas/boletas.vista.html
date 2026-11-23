@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNIVERSIDAD TECNOLÓGICA FIDEL VELÁZQUEZ | Boletas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+    <!-- Barra superior con logo1.png y botón regresar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand-group">
+                <img src="../img/logo1.gif" alt="Logo Institucional" class="header-logo">
+                <strong>UNIVERSIDAD TECNOLÓGICA FIDEL VELÁZQUEZ | Boletas</strong>
+            </div>
+            <a href="index.php" class="btn-back">REGRESAR AL PANEL</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Boletas por Grupo</h2>
+            </div>
+
+            <form method="GET" class="filter-bar">
+                <select name="grupo" class="form-control filter-select" required>
+                    <option value="">Selecciona un grupo</option>
+                    <?php foreach ($gruposDisponibles as $g): ?>
+                        <option value="<?= htmlspecialchars($g) ?>" <?= $grupoSeleccionado === $g ? 'selected' : '' ?>><?= htmlspecialchars($g) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn btn-primary">BUSCAR</button>
+            </form>
+
+            <?php if ($grupoSeleccionado !== '' && !empty($alumnosDelGrupo)): ?>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Matrícula</th>
+                                <th>Alumno</th>
+                                <th>Carrera</th>
+                                <th class="text-right">Opciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($alumnosDelGrupo as $al): ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($al['matricula']) ?></strong></td>
+                                    <td><?= htmlspecialchars($al['nombre'] . ' ' . $al['apellido_paterno'] . ' ' . $al['apellido_materno']) ?></td>
+                                    <td><small><?= htmlspecialchars($al['academico']['carrera'] ?? 'N/A') ?></small></td>
+                                    <td class="actions-cell">
+                                        <a href="boleta_pdf.php?mat=<?= urlencode($al['matricula']) ?>" class="btn btn-info">Visualizar</a>
+                                        <a href="boleta_pdf.php?mat=<?= urlencode($al['matricula']) ?>&pdf=1" target="_blank" class="btn btn-primary">Descargar PDF</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </main>
+
+</body>
+</html>

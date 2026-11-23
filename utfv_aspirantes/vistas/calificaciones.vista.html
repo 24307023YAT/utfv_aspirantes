@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Calificaciones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body data-materias-grupo="<?= htmlspecialchars(json_encode($materiasPorGrupo, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
+
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand-group">
+                <img src="../img/logo1.gif" alt="Logo Institucional" class="header-logo">
+                <strong>UNIVERSIDAD TECNOLÓGICA FIDEL VELÁZQUEZ | Calificaciones</strong>
+            </div>
+            <a href="index.php" class="btn-back">REGRESAR AL PANEL</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <?php if ($guardadoExitoso): ?>
+            <div class="alert alert-success">✅ Calificaciones guardadas correctamente.</div>
+        <?php endif; ?>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Registro de Calificaciones</h2>
+            </div>
+
+            <?php if (!$esProfesor): ?>
+                <div class="mode-switch">
+                    <a href="calificaciones.php?modo=alumno" class="btn-mode <?= $modo === 'alumno' ? 'active' : '' ?>">Por Alumno</a>
+                    <a href="calificaciones.php?modo=grupo" class="btn-mode <?= $modo === 'grupo' ? 'active' : '' ?>">Por Grupo</a>
+                </div>
+            <?php endif; ?>
+
+            <!-- =========================================================
+                 MODO 1: CAPTURA POR ALUMNO (SOLO ADMIN)
+                 ========================================================= -->
+            <?php if (!$esProfesor && $modo === 'alumno'): ?>
+
+                <?php if (!$alumnoSeleccionado): ?>
+                    <form class="filter-bar" onsubmit="event.preventDefault(); filtrarAlumnosEnVivo();">
+                        <input type="text" id="buscadorAlumnoCalif" class="form-control filter-select" placeholder="Buscar por nombre, apellido o matrícula..." value="<?= htmlspecialchars($busqueda) ?>" oninput="filtrarAlumnosEnVivo()" autocomplete="off">
+                        <button type="button" class="btn btn-secondary" onclick="limpiarBusquedaAlumno()">LIMPIAR</button>
+                    </form>
+
+                    <?php if (empty($alumnosActivos)): ?>
+                        <div class="alert alert-info">No hay alumnos inscritos registrados.</div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="data-table" id="tablaAlumnosCalif">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre Completo</th>
+                                        <th>Matrícula</th>
+                                        <th>Carrera</th>
+                                        <th>Grupo</th>
+                                        <th class="text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($alumnosActivos as $res): ?>
+                                        <tr class="fila-alumno">
+                                            <td><strong><?= htmlspecialchars(trim(($res['nombre'] ?? '') . ' ' . ($res['apellido_paterno'] ?? '') . ' ' . ($res['apellido_materno'] ?? ''))) ?></strong></td>
+                                            <td><?= htmlspecialchars($res['matricula'] ?? 'N/A') ?></td>
+                                            <td><small><?= htmlspecialchars($res['academico']['carrera'] ?? 'N/A') ?></small></td>
+                                            <td><?= htmlspecialchars($res['academico']['grupo'] ?? 'N/A') ?></td>
+                                            <td class="text-right">
+                                                <a href="calificaciones.php?modo=alumno&mat=<?= urlencode($res['matricula']) ?>" class="btn btn-primary btn-sm">Cargar</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="sinResultadosAlumno" class="alert alert-info" hidden>No se encontraron alumnos con ese nombre o matrícula.</div>
+                    <?php endif; ?>
+
+                <?php else: ?>
+                    <div class="filter-bar">
+                        <a href="calificaciones.php?modo=alumno" class="btn btn-secondary">Volver a Registrar Calificaciones</a>
+                    </div>
+
+                    <div class="resumen-box">
+                        <div><strong>Alumno:</strong> <?= htmlspecialchars($nombreAlumnoSeleccionado) ?></div>
+                        <div><strong>Matrícula:</strong> <?= htmlspecialchars($alumnoSeleccionado['matricula']) ?> &nbsp;|&nbsp; <strong>Grupo:</strong> <?= htmlspecialchars($alumnoSeleccionado['academico']['grupo'] ?? 'N/A') ?></div>
+                        <div><strong>Carrera:</strong> <?= htmlspecialchars($alumnoSeleccionado['academico']['carrera'] ?? 'N/A') ?></div>
+                        <div><strong>Promedio General del Alumno:</strong> <span id="promedioGeneralAlumno" class="nota-pill nota-pill-final">-</span></div>
+                    </div>
+
+                    <form method="POST" action="calificaciones.php?modo=alumno&mat=<?= urlencode($alumnoSeleccionado['matricula']) ?>">
+                        <input type="hidden" name="accion" value="guardar_alumno_completo">
+                        <input type="hidden" name="matricula" value="<?= htmlspecialchars($alumnoSeleccionado['matricula']) ?>">
+
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Clave</th>
+                                        <th>Materia</th>
+                                        <th>Notas (P1 / P2 / P3 / Final)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($materiasAlumnoSeleccionado as $m):
+                                        $claveM = (string)($m['clave'] ?? '');
+                                        $cal = $m['calificaciones'] ?? [];
+                                        $p1 = $cal['parcial_1'] ?? '';
+                                        $p2 = $cal['parcial_2'] ?? '';
+                                        $p3 = $cal['parcial_3'] ?? '';
+                                        $fin = $cal['final'] ?? '-';
+                                    ?>
+                                        <tr class="fila-calif-alumno">
+                                            <td><strong><?= htmlspecialchars($claveM) ?></strong></td>
+                                            <td><?= htmlspecialchars($m['nombre'] ?? '') ?></td>
+                                            <td>
+                                                <div class="notas-inline-group">
+                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_1]" value="<?= htmlspecialchars((string)$p1) ?>" step="0.1" min="0" max="10" placeholder="P1" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
+                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_2]" value="<?= htmlspecialchars((string)$p2) ?>" step="0.1" min="0" max="10" placeholder="P2" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
+                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_3]" value="<?= htmlspecialchars((string)$p3) ?>" step="0.1" min="0" max="10" placeholder="P3" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
+                                                    <span class="nota-pill nota-pill-final final-alumno-display"><?= $fin !== '' && $fin !== null ? htmlspecialchars((string)$fin) : '-' ?></span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="form-actions-right">
+                            <a href="calificaciones.php?modo=alumno" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar Calificaciones</button>
+                        </div>
+                    </form>
+                <?php endif; ?>
+            <?php endif; ?>
+
+            <!-- =========================================================
+                 MODO 2: CAPTURA Y EDICIÓN MASIVA DIRECTA POR GRUPO
+                 ========================================================= -->
+            <?php if ($modo === 'grupo'): ?>
+                <form method="GET" action="calificaciones.php" id="formFiltroGrupo" class="filter-bar">
+                    <input type="hidden" name="modo" value="grupo">
+                    <input type="hidden" name="clave_mat" id="inputClaveMatOculto" value="<?= htmlspecialchars($claveMateriaSeleccionada) ?>">
+
+                    <select name="grupo" id="selectGrupoCalif" class="form-control filter-select" onchange="alCambiarGrupo()" required>
+                        <option value="">Selecciona un grupo</option>
+                        <?php foreach ($gruposDisponibles as $g): ?>
+                            <option value="<?= htmlspecialchars($g) ?>" <?= $grupoSeleccionado === $g ? 'selected' : '' ?>><?= htmlspecialchars($g) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+
+                <?php if ($grupoSeleccionado !== '' && $claveMateriaSeleccionada !== ''): ?>
+                    <div class="resumen-box">
+                        <div><strong>Grupo:</strong> <?= htmlspecialchars($grupoSeleccionado) ?> &nbsp;|&nbsp; <strong>Alumnos inscritos:</strong> <?= count($alumnosDelGrupo) ?></div>
+                        <div><strong>Materia:</strong> <?= htmlspecialchars($nombreMateriaResumen) ?></div>
+                        <div><strong>Promedio General del Grupo:</strong> <span id="promedioGeneralGrupo" class="nota-pill nota-pill-final">-</span></div>
+                    </div>
+
+                    <?php if (empty($alumnosDelGrupo)): ?>
+                        <div class="alert alert-info">No hay alumnos inscritos en el grupo <?= htmlspecialchars($grupoSeleccionado) ?>.</div>
+                    <?php else: ?>
+                        <form method="POST" action="calificaciones.php">
+                            <input type="hidden" name="accion" value="guardar_grupo_completo">
+                            <input type="hidden" name="grupo" value="<?= htmlspecialchars($grupoSeleccionado) ?>">
+                            <input type="hidden" name="clave_materia" value="<?= htmlspecialchars($claveMateriaSeleccionada) ?>">
+
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Matrícula</th>
+                                            <th>Alumno</th>
+                                            <th>Notas (P1 / P2 / P3 / Final)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($alumnosDelGrupo as $al):
+                                            $mat = (string)$al['matricula'];
+                                            $calActual = [];
+                                            foreach (($al['cargas_academicas'][0]['materias'] ?? []) as $matItem) {
+                                                if (($matItem['clave'] ?? '') === $claveMateriaSeleccionada) {
+                                                    $calActual = $matItem['calificaciones'] ?? [];
+                                                    break;
+                                                }
+                                            }
+                                            $p1 = $calActual['parcial_1'] ?? '';
+                                            $p2 = $calActual['parcial_2'] ?? '';
+                                            $p3 = $calActual['parcial_3'] ?? '';
+                                            $fin = $calActual['final'] ?? '-';
+                                        ?>
+                                            <tr class="fila-calif-grupo">
+                                                <td><strong><?= htmlspecialchars($mat) ?></strong></td>
+                                                <td><?= htmlspecialchars($al['nombre'] . ' ' . $al['apellido_paterno'] . ' ' . $al['apellido_materno']) ?></td>
+                                                <td>
+                                                    <div class="notas-inline-group">
+                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_1]" value="<?= htmlspecialchars((string)$p1) ?>" step="0.1" min="0" max="10" placeholder="P1" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
+                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_2]" value="<?= htmlspecialchars((string)$p2) ?>" step="0.1" min="0" max="10" placeholder="P2" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
+                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_3]" value="<?= htmlspecialchars((string)$p3) ?>" step="0.1" min="0" max="10" placeholder="P3" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
+                                                        <span class="nota-pill nota-pill-final final-grupo-display"><?= $fin !== '' && $fin !== null ? htmlspecialchars((string)$fin) : '-' ?></span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="form-actions-right">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                            </div>
+                        </form>
+                    <?php endif; ?>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+    </main>
+
+    <script>
+        const materiasPorGrupo = JSON.parse(document.body.dataset.materiasGrupo || '{}');
+
+        function normalizarTexto(t) {
+            return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function filtrarAlumnosEnVivo() {
+            const input = document.getElementById('buscadorAlumnoCalif');
+            if (!input) return;
+            const filtro = normalizarTexto(input.value.trim());
+            const filas = document.querySelectorAll('#tablaAlumnosCalif .fila-alumno');
+            const aviso = document.getElementById('sinResultadosAlumno');
+            let visibles = 0;
+            filas.forEach(f => {
+                if (normalizarTexto(f.textContent).includes(filtro)) {
+                    f.style.display = '';
+                    visibles++;
+                } else {
+                    f.style.display = 'none';
+                }
+            });
+            if (aviso) aviso.hidden = visibles > 0;
+        }
+
+        function limpiarBusquedaAlumno() {
+            const input = document.getElementById('buscadorAlumnoCalif');
+            if (!input) return;
+            input.value = '';
+            filtrarAlumnosEnVivo();
+            input.focus();
+        }
+
+        function actualizarPromedioGeneralAlumno() {
+            const displayGeneral = document.getElementById('promedioGeneralAlumno');
+            if (!displayGeneral) return;
+            const finales = document.querySelectorAll('.final-alumno-display');
+            let suma = 0, count = 0;
+            finales.forEach(span => {
+                const val = parseFloat(span.textContent.trim());
+                if (!isNaN(val)) {
+                    suma += val;
+                    count++;
+                }
+            });
+            displayGeneral.textContent = count > 0
+                ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '')
+                : '-';
+        }
+
+        function recalcularFilaAlumno(inputEl) {
+            const fila = inputEl.closest('.fila-calif-alumno');
+            if (!fila) return;
+            const inputs = fila.querySelectorAll('.input-p-alumno');
+            const displayFinal = fila.querySelector('.final-alumno-display');
+            let suma = 0, count = 0;
+            inputs.forEach(inp => {
+                if (inp.value !== '') {
+                    let val = parseFloat(inp.value);
+                    if (!isNaN(val)) {
+                        if (val > 10) { val = 10; inp.value = 10; }
+                        if (val < 0)  { val = 0;  inp.value = 0; }
+                        suma += val;
+                        count++;
+                    }
+                }
+            });
+            displayFinal.textContent = count > 0 ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '') : '-';
+            actualizarPromedioGeneralAlumno();
+        }
+
+        function actualizarPromedioGeneralGrupo() {
+            const displayGeneral = document.getElementById('promedioGeneralGrupo');
+            if (!displayGeneral) return;
+            const finales = document.querySelectorAll('.final-grupo-display');
+            let suma = 0, count = 0;
+            finales.forEach(span => {
+                const val = parseFloat(span.textContent.trim());
+                if (!isNaN(val)) {
+                    suma += val;
+                    count++;
+                }
+            });
+            displayGeneral.textContent = count > 0
+                ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '')
+                : '-';
+        }
+
+        function recalcularFilaGrupo(inputEl) {
+            const fila = inputEl.closest('.fila-calif-grupo');
+            if (!fila) return;
+            const inputs = fila.querySelectorAll('.input-p-grupo');
+            const displayFinal = fila.querySelector('.final-grupo-display');
+            let suma = 0, count = 0;
+            inputs.forEach(inp => {
+                if (inp.value !== '') {
+                    let val = parseFloat(inp.value);
+                    if (!isNaN(val)) {
+                        if (val > 10) { val = 10; inp.value = 10; }
+                        if (val < 0)  { val = 0;  inp.value = 0; }
+                        suma += val;
+                        count++;
+                    }
+                }
+            });
+            displayFinal.textContent = count > 0 ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '') : '-';
+            actualizarPromedioGeneralGrupo();
+        }
+
+        function alCambiarGrupo() {
+            const selectGrupo = document.getElementById('selectGrupoCalif');
+            const inputClave = document.getElementById('inputClaveMatOculto');
+            const form = document.getElementById('formFiltroGrupo');
+            if (!selectGrupo || !inputClave || !form) return;
+
+            const grupo = selectGrupo.value;
+            if (grupo && materiasPorGrupo[grupo] && materiasPorGrupo[grupo].length > 0) {
+                inputClave.value = materiasPorGrupo[grupo][0].clave;
+            } else {
+                inputClave.value = '';
+            }
+            form.submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            filtrarAlumnosEnVivo();
+            actualizarPromedioGeneralAlumno();
+            actualizarPromedioGeneralGrupo();
+        });
+    </script>
+</body>
+</html>

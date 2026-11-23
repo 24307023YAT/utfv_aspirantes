@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Aspirante</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+    <!-- Barra superior con logo1.GIF y botón regresar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand-group">
+                <img src="../img/logo1.gif" alt="Logo Institucional" class="header-logo">
+                <strong>UNIVERSIDAD TECNOLÓGICA FIDEL VELÁZQUEZ | Registrar Aspirante</strong>
+            </div>
+            <a href="index.php" class="btn-back">REGRESAR AL PANEL</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Mensaje de confirmación al guardar -->
+        <?php if ($registroExitoso): ?>
+            <div class="alert alert-success">✅ Aspirante registrado correctamente.</div>
+        <?php endif; ?>
+
+        <?php if (!empty($errorRegistro)): ?>
+            <div class="alert alert-danger" style="background-color:#fee2e2; color:#991b1b; padding:12px 16px; border-radius:8px; margin-bottom:16px; font-weight:500;">
+                ⚠️ <?= htmlspecialchars($errorRegistro) ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Tarjeta del formulario de registro -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Datos del Aspirante</h2>
+            </div>
+
+            <form action="" method="POST" class="form-grid" id="form-aspirante">
+                <div class="form-group">
+                    <label class="form-label">Nombre(s) *</label>
+                    <input type="text" name="nombre" class="form-control" placeholder="Ej. Yahir,Topanga" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Apellido Paterno *</label>
+                    <input type="text" name="apellido_paterno" class="form-control" placeholder="Ej. Arvizu" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Apellido Materno *</label>
+                    <input type="text" name="apellido_materno" class="form-control" placeholder="Ej. Lara" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Correo Electrónico *</label>
+                    <input type="email" name="correo" class="form-control" placeholder="correo@ejemplo.com" required>
+                </div>
+
+                <div class="form-group">
+                    <!-- Mensaje de alerta arriba del campo teléfono -->
+                    <div id="aviso-telefono" style="display:none; background-color:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; padding:6px 10px; border-radius:6px; font-size:0.82rem; font-weight:600; margin-bottom:6px;">
+                        ⚠️ Solo se permiten 10 dígitos en el número de teléfono.
+                    </div>
+                    <label class="form-label">Teléfono</label>
+                    <input type="tel" name="telefono" id="telefono" class="form-control" placeholder="5512345678" inputmode="numeric" pattern="[0-9]{10}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Edad</label>
+                    <input type="number" name="edad" class="form-control" placeholder="20">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Género</label>
+                    <select name="genero" class="form-control">
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Calle y Número</label>
+                    <input type="text" name="calle" class="form-control" placeholder="Melchor Ocampo">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Código Postal</label>
+                    <input type="text" name="codigo_postal" id="codigo_postal" class="form-control" placeholder="54469" maxlength="5" inputmode="numeric">
+                    <small id="estado-cp" style="display:block; font-size:0.78rem; color:#6b7280; margin-top:4px;"></small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Colonia</label>
+                    <input type="text" name="colonia" id="colonia" list="lista-colonias" class="form-control" placeholder="Jimenez Cantú" autocomplete="off">
+                    <datalist id="lista-colonias"></datalist>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Municipio</label>
+                    <input type="text" name="municipio" id="municipio" class="form-control" placeholder="Nicolás Romero">
+                </div>
+
+                <!-- Botón de Guardar -->
+                <div class="form-group form-group-full mt-form">
+                    <button type="submit" class="btn btn-primary">GUARDAR</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputTelefono = document.getElementById('telefono');
+            const avisoTelefono = document.getElementById('aviso-telefono');
+            let timerAviso = null;
+
+            function mostrarAvisoTelefono() {
+                avisoTelefono.style.display = 'block';
+                clearTimeout(timerAviso);
+                timerAviso = setTimeout(() => {
+                    avisoTelefono.style.display = 'none';
+                }, 3500);
+            }
+
+            // Bloquea teclas extra si ya hay 10 dígitos
+            inputTelefono.addEventListener('keydown', (e) => {
+                const teclasPermitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                if (teclasPermitidas.includes(e.key) || e.ctrlKey || e.metaKey) return;
+
+                const soloNumeros = inputTelefono.value.replace(/\D/g, '');
+                const hayTextoSeleccionado = inputTelefono.selectionStart !== inputTelefono.selectionEnd;
+
+                if (soloNumeros.length >= 10 && !hayTextoSeleccionado) {
+                    e.preventDefault();
+                    mostrarAvisoTelefono();
+                }
+            });
+
+            // Filtra letras y corta a 10 dígitos si pegan un número más largo
+            inputTelefono.addEventListener('input', () => {
+                const limpio = inputTelefono.value.replace(/\D/g, '');
+                if (limpio.length > 10) {
+                    inputTelefono.value = limpio.slice(0, 10);
+                    mostrarAvisoTelefono();
+                } else {
+                    inputTelefono.value = limpio;
+                }
+            });
+
+            // Automatización de Código Postal -> Colonia y Municipio
+            const inputCP = document.getElementById('codigo_postal');
+            const inputColonia = document.getElementById('colonia');
+            const listaColonias = document.getElementById('lista-colonias');
+            const inputMunicipio = document.getElementById('municipio');
+            const estadoCP = document.getElementById('estado-cp');
+
+            inputCP.addEventListener('input', async () => {
+                const cp = inputCP.value.replace(/\D/g, '').slice(0, 5);
+                inputCP.value = cp;
+
+                if (cp.length < 5) {
+                    estadoCP.textContent = '';
+                    listaColonias.innerHTML = '';
+                    return;
+                }
+
+                estadoCP.style.color = '#6b7280';
+                estadoCP.textContent = 'Buscando ubicación...';
+
+                try {
+                    const respuesta = await fetch(`buscar_cp.php?cp=${cp}`);
+                    const datos = await respuesta.json();
+
+                    if (!datos.ok) throw new Error('CP no encontrado');
+
+                    inputMunicipio.value = datos.municipio || '';
+
+                    const colonias = datos.colonias || [];
+                    listaColonias.innerHTML = '';
+                    colonias.forEach(col => {
+                        const option = document.createElement('option');
+                        option.value = col;
+                        listaColonias.appendChild(option);
+                    });
+
+                    inputColonia.value = colonias[0] || '';
+
+                    estadoCP.style.color = '#15803d';
+                    estadoCP.textContent = colonias.length > 1
+                        ? `✓ ${colonias.length} colonias encontradas (haz clic en Colonia para elegir otra).`
+                        : '✓ Ubicación completada automáticamente.';
+                } catch (error) {
+                    estadoCP.style.color = '#b45309';
+                    estadoCP.textContent = 'No se encontró el CP automáticamente; ingrésalo manualmente.';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

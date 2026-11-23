@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTFV | Inicio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand-group">
+                <img src="../img/logo1.gif" alt="Logo Institucional" class="header-logo">
+                <div>
+                    <h1 class="brand-title">UNIVERSIDAD TECNOLÓGICA FIDEL VELÁZQUEZ</h1>
+                    <span class="brand-subtitle">
+                        Bienvenido <?= htmlspecialchars($_SESSION['nombre_usuario'] ?? $_SESSION['nombre'] ?? 'Usuario') ?>
+                        <?php if (($_SESSION['rol'] ?? '') === 'alumno'): ?>
+                            — Matrícula: <?= htmlspecialchars($_SESSION['matricula'] ?? '') ?>
+                        <?php endif; ?>
+                    </span>
+                </div>
+            </div>
+            <a href="logout.php" class="btn-back">CERRAR SESIÓN</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero-header">
+            <h2 class="hero-title">PANEL CONTROL ESCOLAR</h2>
+            <p class="hero-subtitle">Selecciona el módulo para continuar</p>
+        </div>
+
+        <div class="grid-menu">
+
+            <?php if (($_SESSION['rol'] ?? '') !== 'alumno'): ?>
+                <?php if (strtoupper($_SESSION['rol'] ?? '') === 'ADMIN'): ?>
+                    <?php
+                    if (!isset($pendientes)) {
+                        require_once __DIR__ . '/../config/db.php';
+                        $pendientes = $db->aspirantes->countDocuments([
+                            'estatus' => ['$ne' => 'ALUMNO_ACTIVO']
+                        ]);
+                    }
+                    ?>
+
+                    <a href="registrar_aspirante.php" class="menu-card">
+                        <div class="menu-icon">📝<sup style="font-size: 20px;">👥</sup></div>
+                        <h3 class="menu-card-title">REGISTRAR ASPIRANTE</h3>
+                        <p class="menu-card-desc">Captura de datos personales y domicilio de nuevo ingreso</p>
+                        <span class="menu-card-link">INGRESAR</span>
+                    </a>
+
+                    <a href="inscribir_aspirante.php" class="menu-card">
+                        <div class="menu-icon">👤</div>
+                        <h3 class="menu-card-title">INSCRIBIR ALUMNO</h3>
+                        <p class="menu-card-desc">Asignación de matrícula, grupo y carga académica</p>
+                        <span class="menu-card-link">INGRESAR (<?= $pendientes ?>)</span>
+                    </a>
+                <?php endif; ?>
+
+                <a href="calificaciones.php" class="menu-card">
+                    <div class="menu-icon">📝</div>
+                    <h3 class="menu-card-title">REGISTRAR CALIFICACIONES</h3>
+                    <p class="menu-card-desc">Captura de evaluaciones parciales y finales</p>
+                    <span class="menu-card-link">INGRESAR</span>
+                </a>
+
+                <a href="boletas.php" class="menu-card">
+                    <div class="menu-icon">📄</div>
+                    <h3 class="menu-card-title">BOLETAS</h3>
+                    <p class="menu-card-desc">Consulta de boletas, visualización y descarga en PDF</p>
+                    <span class="menu-card-link">INGRESAR</span>
+                </a>
+            <?php endif; ?>
+
+            <?php if (($_SESSION['rol'] ?? '') === 'alumno'): ?>
+                <a href="alumno_tira.php" class="menu-card">
+                    <div class="menu-icon">📚</div>
+                    <h3 class="menu-card-title">TIRA DE MATERIAS</h3>
+                    <p class="menu-card-desc">Consulta tus asignaturas inscritas, clave de materia y docente asignado</p>
+                    <span class="menu-card-link">INGRESAR</span>
+                </a>
+
+                <a href="alumno_calificaciones.php" class="menu-card">
+                    <div class="menu-icon">📝</div>
+                    <h3 class="menu-card-title">MIS CALIFICACIONES</h3>
+                    <p class="menu-card-desc">Consulta de evaluaciones parciales y finales</p>
+                    <span class="menu-card-link">INGRESAR</span>
+                </a>
+
+                <a href="alumno_boleta.php" class="menu-card">
+                    <div class="menu-icon">📄</div>
+                    <h3 class="menu-card-title">BOLETAS</h3>
+                    <p class="menu-card-desc">Consulta de boleta, visualización y descarga en PDF</p>
+                    <span class="menu-card-link">INGRESAR</span>
+                </a>
+            <?php endif; ?>
+
+        </div>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTFV | Mi Boleta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand-group">
+                <img src="../img/logo1.gif" alt="Logo Institucional" class="header-logo">
+                <strong>UNIVERSIDAD TECNOLÓGICA FIDEL VELÁZQUEZ | Mi Boleta</strong>
+            </div>
+            <a href="index.php" class="btn-back">REGRESAR AL PANEL</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Boleta Oficial de Calificaciones</h2>
+            </div>
+
+            <?php if (!empty($alumno)): ?>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Matrícula</th>
+                                <th>Alumno</th>
+                                <th>Carrera</th>
+                                <th>Grupo</th>
+                                <th class="text-right">Opciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($alumno['matricula']) ?></strong></td>
+                                <td><?= htmlspecialchars(($alumno['nombre'] ?? '') . ' ' . ($alumno['apellido_paterno'] ?? '') . ' ' . ($alumno['apellido_materno'] ?? '')) ?></td>
+                                <td><small><?= htmlspecialchars($academico['carrera'] ?? 'N/A') ?></small></td>
+                                <td><?= htmlspecialchars($academico['grupo'] ?? $carga_actual['grupo'] ?? 'N/A') ?></td>
+                                <td class="actions-cell">
+                                    <a href="boleta_pdf.php?mat=<?= urlencode($alumno['matricula']) ?>" class="btn btn-info">Visualizar</a>
+                                    <a href="boleta_pdf.php?mat=<?= urlencode($alumno['matricula']) ?>&pdf=1" target="_blank" class="btn btn-primary">Descargar PDF</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p>No se encontró información académica para la matrícula actual.</p>
+            <?php endif; ?>
+        </div>
+    </main>
+
+</body>
+</html>
