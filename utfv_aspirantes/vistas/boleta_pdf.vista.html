@@ -9,7 +9,7 @@
 
     <!-- Barra de acciones superior (oculta al imprimir) -->
     <div class="pdf-toolbar">
-        <a href="boletas.php?grupo=<?= urlencode($alumno['academico']['grupo'] ?? '') ?>" class="btn btn-secondary">REGRESAR</a>
+        <a href="<?= htmlspecialchars($urlRegresarBoleta) ?>" class="btn btn-secondary">REGRESAR</a>
         <button onclick="window.print()" class="btn btn-primary">Descargar PDF</button>
     </div>
 
@@ -51,6 +51,7 @@
                     <th class="text-center">P1</th>
                     <th class="text-center">P2</th>
                     <th class="text-center">P3</th>
+                    <th class="text-center">EGO</th>
                     <th class="text-center">Final</th>
                     <th class="text-center">Estatus</th>
                 </tr>
@@ -58,22 +59,27 @@
             <tbody>
                 <?php foreach ($materias as $m): 
                     $cal = $m['calificaciones'] ?? [];
-                    $final = $cal['final'] ?? null;
+                    $tieneEgo = isset($cal['ego']) && $cal['ego'] !== null && $cal['ego'] !== '';
+                    $final = $tieneEgo ? (float)$cal['ego'] : ($cal['final'] ?? null);
+                    $aprobada = ($final !== null && ($tieneEgo || (float)$final >= 7));
                 ?>
                 <tr>
                     <td><strong><?= htmlspecialchars($m['clave']) ?></strong></td>
                     <td><?= htmlspecialchars($m['nombre']) ?></td>
                     <td><?= htmlspecialchars($m['profesor']) ?></td>
-                    <td class="text-center"><?= $cal['parcial_1'] !== null ? number_format((float)$cal['parcial_1'], 1) : '-' ?></td>
-                    <td class="text-center"><?= $cal['parcial_2'] !== null ? number_format((float)$cal['parcial_2'], 1) : '-' ?></td>
-                    <td class="text-center"><?= $cal['parcial_3'] !== null ? number_format((float)$cal['parcial_3'], 1) : '-' ?></td>
-                    <td class="text-center <?= $final !== null ? ($final >= 7 ? 'grade-pass' : 'grade-fail') : '' ?>">
-                        <?= $final !== null ? number_format((float)$final, 1) : '-' ?>
+                    <td class="text-center"><?= isset($cal['parcial_1']) && $cal['parcial_1'] !== null && $cal['parcial_1'] !== '' ? number_format((float)$cal['parcial_1'], 1) : '-' ?></td>
+                    <td class="text-center"><?= isset($cal['parcial_2']) && $cal['parcial_2'] !== null && $cal['parcial_2'] !== '' ? number_format((float)$cal['parcial_2'], 1) : '-' ?></td>
+                    <td class="text-center"><?= isset($cal['parcial_3']) && $cal['parcial_3'] !== null && $cal['parcial_3'] !== '' ? number_format((float)$cal['parcial_3'], 1) : '-' ?></td>
+                    <td class="text-center"><?= $tieneEgo ? number_format((float)$cal['ego'], 1) : '-' ?></td>
+                    <td class="text-center <?= $final !== null && $final !== '' ? ($aprobada ? 'grade-pass' : 'grade-fail') : '' ?>">
+                        <?= $final !== null && $final !== '' ? number_format((float)$final, 1) : '-' ?>
                     </td>
                     <td class="text-center">
-                        <?php if ($final === null): ?>
+                        <?php if ($final === null || $final === ''): ?>
                             En curso
-                        <?php elseif ($final >= 7): ?>
+                        <?php elseif ($tieneEgo): ?>
+                            Acreditada (EGO)
+                        <?php elseif ((float)$final >= 7): ?>
                             Acreditada
                         <?php else: ?>
                             No Acreditada

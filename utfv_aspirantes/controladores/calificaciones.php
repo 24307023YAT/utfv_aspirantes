@@ -55,17 +55,21 @@ function recalcularPromedioFinal($coleccionAspirantes, string $matricula, string
     foreach ($materias as $mat) {
         if (($mat['clave'] ?? '') === $claveMateria) {
             $califs = $mat['calificaciones'] ?? [];
-            $suma = 0.0;
-            $capturados = 0;
 
-            foreach (['parcial_1', 'parcial_2', 'parcial_3'] as $p) {
-                if (isset($califs[$p]) && $califs[$p] !== null && $califs[$p] !== '') {
-                    $suma += (float)$califs[$p];
-                    $capturados++;
+            /* Si tiene EGO capturado, el final es la calificación del EGO */
+            if (isset($califs['ego']) && $califs['ego'] !== null && $califs['ego'] !== '') {
+                $promedioFinal = round((float)$califs['ego'], 1);
+            } else {
+                $suma = 0.0;
+                $capturados = 0;
+                foreach (['parcial_1', 'parcial_2', 'parcial_3'] as $p) {
+                    if (isset($califs[$p]) && $califs[$p] !== null && $califs[$p] !== '') {
+                        $suma += (float)$califs[$p];
+                        $capturados++;
+                    }
                 }
+                $promedioFinal = $capturados > 0 ? round($suma / $capturados, 1) : null;
             }
-
-            $promedioFinal = $capturados > 0 ? round($suma / $capturados, 1) : null;
 
             $coleccionAspirantes->updateOne(
                 [
@@ -102,8 +106,17 @@ function guardarParcialesMateria($coleccionAspirantes, string $matricula, string
         }
     }
 
-    $setUpdate['cargas_academicas.0.materias.$[mat].calificaciones.final'] =
-        $capturados > 0 ? round($suma / $capturados, 1) : null;
+    /* Manejo del campo EGO conservando los 3 parciales intactos */
+    $egoRaw = trim((string)($datosParciales['ego'] ?? ''));
+    if ($egoRaw !== '') {
+        $notaEgo = max(0, min(10, (float)$egoRaw));
+        $setUpdate['cargas_academicas.0.materias.$[mat].calificaciones.ego'] = $notaEgo;
+        $setUpdate['cargas_academicas.0.materias.$[mat].calificaciones.final'] = round($notaEgo, 1);
+    } else {
+        $setUpdate['cargas_academicas.0.materias.$[mat].calificaciones.ego'] = null;
+        $setUpdate['cargas_academicas.0.materias.$[mat].calificaciones.final'] =
+            $capturados > 0 ? round($suma / $capturados, 1) : null;
+    }
 
     $coleccionAspirantes->updateOne(
         [
@@ -200,10 +213,11 @@ foreach ($alumnosActivos as $al) {
         $p1Ok = isset($califs['parcial_1']) && $califs['parcial_1'] !== null && $califs['parcial_1'] !== '';
         $p2Ok = isset($califs['parcial_2']) && $califs['parcial_2'] !== null && $califs['parcial_2'] !== '';
         $p3Ok = isset($califs['parcial_3']) && $califs['parcial_3'] !== null && $califs['parcial_3'] !== '';
-        $tieneParciales = ($p1Ok || $p2Ok || $p3Ok);
+        $egoOk = isset($califs['ego']) && $califs['ego'] !== null && $califs['ego'] !== '';
+        $tieneNotas = ($p1Ok || $p2Ok || $p3Ok || $egoOk);
         $faltaFinal = (!isset($califs['final']) || $califs['final'] === null || $califs['final'] === '');
 
-        if ($mat !== '' && $tieneParciales && $faltaFinal && !empty($m['clave'])) {
+        if ($mat !== '' && $tieneNotas && $faltaFinal && !empty($m['clave'])) {
             recalcularPromedioFinal($coleccionAspirantes, $mat, $m['clave']);
             $huboActualizacion = true;
         }

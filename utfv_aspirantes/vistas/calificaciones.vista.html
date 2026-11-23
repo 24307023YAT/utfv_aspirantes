@@ -101,7 +101,7 @@
                                     <tr>
                                         <th>Clave</th>
                                         <th>Materia</th>
-                                        <th>Notas (P1 / P2 / P3 / Final)</th>
+                                        <th>Notas (P1 / P2 / P3 / EGO / Final)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -111,17 +111,22 @@
                                         $p1 = $cal['parcial_1'] ?? '';
                                         $p2 = $cal['parcial_2'] ?? '';
                                         $p3 = $cal['parcial_3'] ?? '';
+                                        $ego = $cal['ego'] ?? '';
                                         $fin = $cal['final'] ?? '-';
+                                        $tieneEgo = ($ego !== '' && $ego !== null);
                                     ?>
                                         <tr class="fila-calif-alumno">
                                             <td><strong><?= htmlspecialchars($claveM) ?></strong></td>
                                             <td><?= htmlspecialchars($m['nombre'] ?? '') ?></td>
                                             <td>
                                                 <div class="notas-inline-group">
-                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_1]" value="<?= htmlspecialchars((string)$p1) ?>" step="0.1" min="0" max="10" placeholder="P1" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
-                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_2]" value="<?= htmlspecialchars((string)$p2) ?>" step="0.1" min="0" max="10" placeholder="P2" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
-                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_3]" value="<?= htmlspecialchars((string)$p3) ?>" step="0.1" min="0" max="10" placeholder="P3" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
-                                                    <span class="nota-pill nota-pill-final final-alumno-display"><?= $fin !== '' && $fin !== null ? htmlspecialchars((string)$fin) : '-' ?></span>
+                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_1]" value="<?= htmlspecialchars((string)$p1) ?>" step="0.1" min="0" max="10" placeholder="P1" title="Parcial 1" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
+                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_2]" value="<?= htmlspecialchars((string)$p2) ?>" step="0.1" min="0" max="10" placeholder="P2" title="Parcial 2" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
+                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][parcial_3]" value="<?= htmlspecialchars((string)$p3) ?>" step="0.1" min="0" max="10" placeholder="P3" title="Parcial 3" class="input-parcial-pill input-p-alumno" oninput="recalcularFilaAlumno(this)">
+                                                    <input type="number" name="notas_alumno[<?= htmlspecialchars($claveM) ?>][ego]" value="<?= htmlspecialchars((string)$ego) ?>" step="0.1" min="0" max="10" placeholder="EGO" title="Examen General (EGO)" class="input-parcial-pill input-ego-alumno" oninput="recalcularFilaAlumno(this)">
+                                                    <span class="nota-pill nota-pill-final final-alumno-display <?= $tieneEgo ? 'grade-pass' : '' ?>" title="<?= $tieneEgo ? 'Aprobado por EGO' : 'Promedio Final' ?>">
+                                                        <?= $fin !== '' && $fin !== null ? htmlspecialchars((string)$fin) : '-' ?>
+                                                    </span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -175,7 +180,7 @@
                                         <tr>
                                             <th>Matrícula</th>
                                             <th>Alumno</th>
-                                            <th>Notas (P1 / P2 / P3 / Final)</th>
+                                            <th>Notas (P1 / P2 / P3 / EGO / Final)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -191,17 +196,22 @@
                                             $p1 = $calActual['parcial_1'] ?? '';
                                             $p2 = $calActual['parcial_2'] ?? '';
                                             $p3 = $calActual['parcial_3'] ?? '';
+                                            $ego = $calActual['ego'] ?? '';
                                             $fin = $calActual['final'] ?? '-';
+                                            $tieneEgo = ($ego !== '' && $ego !== null);
                                         ?>
                                             <tr class="fila-calif-grupo">
                                                 <td><strong><?= htmlspecialchars($mat) ?></strong></td>
                                                 <td><?= htmlspecialchars($al['nombre'] . ' ' . $al['apellido_paterno'] . ' ' . $al['apellido_materno']) ?></td>
                                                 <td>
                                                     <div class="notas-inline-group">
-                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_1]" value="<?= htmlspecialchars((string)$p1) ?>" step="0.1" min="0" max="10" placeholder="P1" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
-                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_2]" value="<?= htmlspecialchars((string)$p2) ?>" step="0.1" min="0" max="10" placeholder="P2" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
-                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_3]" value="<?= htmlspecialchars((string)$p3) ?>" step="0.1" min="0" max="10" placeholder="P3" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
-                                                        <span class="nota-pill nota-pill-final final-grupo-display"><?= $fin !== '' && $fin !== null ? htmlspecialchars((string)$fin) : '-' ?></span>
+                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_1]" value="<?= htmlspecialchars((string)$p1) ?>" step="0.1" min="0" max="10" placeholder="P1" title="Parcial 1" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
+                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_2]" value="<?= htmlspecialchars((string)$p2) ?>" step="0.1" min="0" max="10" placeholder="P2" title="Parcial 2" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
+                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][parcial_3]" value="<?= htmlspecialchars((string)$p3) ?>" step="0.1" min="0" max="10" placeholder="P3" title="Parcial 3" class="input-parcial-pill input-p-grupo" oninput="recalcularFilaGrupo(this)">
+                                                        <input type="number" name="notas_grupo[<?= htmlspecialchars($mat) ?>][ego]" value="<?= htmlspecialchars((string)$ego) ?>" step="0.1" min="0" max="10" placeholder="EGO" title="Examen General (EGO)" class="input-parcial-pill input-ego-grupo" oninput="recalcularFilaGrupo(this)">
+                                                        <span class="nota-pill nota-pill-final final-grupo-display <?= $tieneEgo ? 'grade-pass' : '' ?>" title="<?= $tieneEgo ? 'Aprobado por EGO' : 'Promedio Final' ?>">
+                                                            <?= $fin !== '' && $fin !== null ? htmlspecialchars((string)$fin) : '-' ?>
+                                                        </span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -253,6 +263,15 @@
             input.focus();
         }
 
+        function validarRangoNota(inp) {
+            if (inp.value === '') return null;
+            let val = parseFloat(inp.value);
+            if (isNaN(val)) return null;
+            if (val > 10) { val = 10; inp.value = 10; }
+            if (val < 0)  { val = 0;  inp.value = 0; }
+            return val;
+        }
+
         function actualizarPromedioGeneralAlumno() {
             const displayGeneral = document.getElementById('promedioGeneralAlumno');
             if (!displayGeneral) return;
@@ -274,20 +293,29 @@
             const fila = inputEl.closest('.fila-calif-alumno');
             if (!fila) return;
             const inputs = fila.querySelectorAll('.input-p-alumno');
+            const inputEgo = fila.querySelector('.input-ego-alumno');
             const displayFinal = fila.querySelector('.final-alumno-display');
-            let suma = 0, count = 0;
-            inputs.forEach(inp => {
-                if (inp.value !== '') {
-                    let val = parseFloat(inp.value);
-                    if (!isNaN(val)) {
-                        if (val > 10) { val = 10; inp.value = 10; }
-                        if (val < 0)  { val = 0;  inp.value = 0; }
+
+            const valEgo = inputEgo ? validarRangoNota(inputEgo) : null;
+            inputs.forEach(inp => validarRangoNota(inp));
+
+            if (valEgo !== null) {
+                displayFinal.textContent = (Math.round(valEgo * 10) / 10).toFixed(1).replace(/\.0$/, '');
+                displayFinal.classList.add('grade-pass');
+                displayFinal.title = 'Aprobado por EGO';
+            } else {
+                displayFinal.classList.remove('grade-pass');
+                displayFinal.title = 'Promedio Final';
+                let suma = 0, count = 0;
+                inputs.forEach(inp => {
+                    const val = validarRangoNota(inp);
+                    if (val !== null) {
                         suma += val;
                         count++;
                     }
-                }
-            });
-            displayFinal.textContent = count > 0 ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '') : '-';
+                });
+                displayFinal.textContent = count > 0 ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '') : '-';
+            }
             actualizarPromedioGeneralAlumno();
         }
 
@@ -312,20 +340,29 @@
             const fila = inputEl.closest('.fila-calif-grupo');
             if (!fila) return;
             const inputs = fila.querySelectorAll('.input-p-grupo');
+            const inputEgo = fila.querySelector('.input-ego-grupo');
             const displayFinal = fila.querySelector('.final-grupo-display');
-            let suma = 0, count = 0;
-            inputs.forEach(inp => {
-                if (inp.value !== '') {
-                    let val = parseFloat(inp.value);
-                    if (!isNaN(val)) {
-                        if (val > 10) { val = 10; inp.value = 10; }
-                        if (val < 0)  { val = 0;  inp.value = 0; }
+
+            const valEgo = inputEgo ? validarRangoNota(inputEgo) : null;
+            inputs.forEach(inp => validarRangoNota(inp));
+
+            if (valEgo !== null) {
+                displayFinal.textContent = (Math.round(valEgo * 10) / 10).toFixed(1).replace(/\.0$/, '');
+                displayFinal.classList.add('grade-pass');
+                displayFinal.title = 'Aprobado por EGO';
+            } else {
+                displayFinal.classList.remove('grade-pass');
+                displayFinal.title = 'Promedio Final';
+                let suma = 0, count = 0;
+                inputs.forEach(inp => {
+                    const val = validarRangoNota(inp);
+                    if (val !== null) {
                         suma += val;
                         count++;
                     }
-                }
-            });
-            displayFinal.textContent = count > 0 ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '') : '-';
+                });
+                displayFinal.textContent = count > 0 ? (Math.round((suma / count) * 10) / 10).toFixed(1).replace(/\.0$/, '') : '-';
+            }
             actualizarPromedioGeneralGrupo();
         }
 
